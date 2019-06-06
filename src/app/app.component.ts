@@ -13,17 +13,34 @@ export class AppComponent implements OnInit {
 
   private client: AgoraClient;
   private localStream: Stream;
-  
-  constructor(private ngxAgoraService: NgxAgoraService) {}
+  private uid: number;
+
+  constructor(private ngxAgoraService: NgxAgoraService) {
+    this.uid = Math.floor(Math.random() * 100);
+  }
 
   ngOnInit() {
     this.client = this.ngxAgoraService.createClient({ mode: 'rtc', codec: 'h264' });
     this.assignClientHandlers();
 
-     // Added in this step to initialize the local A/V stream
-     this.localStream = this.ngxAgoraService.createStream({ streamID: this.uid, audio: true, video: true, screen: false });
-     this.assignLocalStreamHandlers();
-     this.initLocalStream();
+    this.localStream = this.ngxAgoraService.createStream({ streamID: this.uid, audio: true, video: true, screen: false });
+    this.assignLocalStreamHandlers();
+    // Join and publish methods added in this step
+    this.initLocalStream(() => this.join(uid => this.publish(), error => console.error(error)));
+  }
+
+  /**
+   * Attempts to connect to an online chat room where users can host and receive A/V streams.
+   */
+  join(onSuccess?: (uid: number | string) => void, onFailure?: (error: Error) => void): void {
+    this.client.join(null, 'foo-bar', this.uid, onSuccess, onFailure);
+  }
+
+  /**
+   * Attempts to upload the created local A/V stream to a joined chat room.
+   */
+  publish(): void {
+    this.client.publish(this.localStream, err => console.log('Publish local stream error: ' + err));
   }
 
   private assignClientHandlers(): void {
@@ -88,18 +105,18 @@ export class AppComponent implements OnInit {
     });
   }
 
-private initLocalStream(onSuccess?: () => any): void {
-  this.localStream.init(
-    () => {
-       // The user has granted access to the camera and mic.
-       this.localStream.play(this.localCallId);
-       if (onSuccess) {
-         onSuccess();
-       }
-    },
-    err => console.error('getUserMedia failed', err)
-  );
-}
+  private initLocalStream(onSuccess?: () => any): void {
+    this.localStream.init(
+      () => {
+        // The user has granted access to the camera and mic.
+        this.localStream.play(this.localCallId);
+        if (onSuccess) {
+          onSuccess();
+        }
+      },
+      err => console.error('getUserMedia failed', err)
+    );
+  }
 
   private getRemoteId(stream: Stream): string {
     return `agora_remote-${stream.getId()}`;
