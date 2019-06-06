@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { NgxAgoraService, Stream, AgoraClient, ClientEvent } from 'ngx-agora';
+import { AgoraClient, ClientEvent, NgxAgoraService, Stream, StreamEvent } from 'ngx-agora';
 
 @Component({
   selector: 'app-root',
@@ -19,6 +19,11 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     this.client = this.ngxAgoraService.createClient({ mode: 'rtc', codec: 'h264' });
     this.assignClientHandlers();
+
+     // Added in this step to initialize the local A/V stream
+     this.localStream = this.ngxAgoraService.createStream({ streamID: this.uid, audio: true, video: true, screen: false });
+     this.assignLocalStreamHandlers();
+     this.initLocalStream();
   }
 
   private assignClientHandlers(): void {
@@ -71,6 +76,30 @@ export class AppComponent implements OnInit {
       }
     });
   }
+
+  private assignLocalStreamHandlers(): void {
+    this.localStream.on(StreamEvent.MediaAccessAllowed, () => {
+      console.log('accessAllowed');
+    });
+
+    // The user has denied access to the camera and mic.
+    this.localStream.on(StreamEvent.MediaAccessDenied, () => {
+      console.log('accessDenied');
+    });
+  }
+
+private initLocalStream(onSuccess?: () => any): void {
+  this.localStream.init(
+    () => {
+       // The user has granted access to the camera and mic.
+       this.localStream.play(this.localCallId);
+       if (onSuccess) {
+         onSuccess();
+       }
+    },
+    err => console.error('getUserMedia failed', err)
+  );
+}
 
   private getRemoteId(stream: Stream): string {
     return `agora_remote-${stream.getId()}`;
