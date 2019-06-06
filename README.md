@@ -1,4 +1,6 @@
-# AngularVideo
+# Angular Video
+
+The repository for the [Medium tutorial](https://medium.com/@d_thompson6/angular-video-conferencing-with-agora-io-45905235eebb) on integrating [Agora.io's JS SDK](https://docs.agora.io/en/Video/API%20Reference/web/index.html) with Angular using the [ngx-agora](https://github.com/drew-thompson/ngx-agora) library.
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 7.3.9.
 
